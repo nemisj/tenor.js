@@ -93,22 +93,53 @@ describe('test', () => {
   it('should run series', (done) => {
     const flow = {
       user() {
+        return 'user';
       },
+
       city() {
+        return 'city';
       },
+
+      asyncCall(callback) {
+        setTimeout(() => {
+          callback(null, 'asyncCall');
+        }, 10);
+      },
+
       bankAccount(user, city) {
-        console.log('bankAccount:', user, city);
+        return Promise.resolve({
+          user,
+          city
+        });
       },
-      all(bankAccount, city, user) {
-        console.log('all:', bankAccount, city, user);
+
+      all(bankAccount, city, user, asyncCall) {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve({
+              bankAccount,
+              city,
+              user,
+              asyncCall
+            });
+          }, 1000);
+        });
       }
     };
 
     execute(flow, (all) => {
-      console.log('last:', all);
-    })
-      .then((result) => {
-        return done();
-      }, done);
+      expect(all).to.deep.equal({
+        bankAccount: {
+          user: 'user',
+          city: 'city'
+        },
+        city: 'city',
+        user: 'user',
+        asyncCall: 'asyncCall'
+      });
+
+      return done();
+    });
+
   });
 });

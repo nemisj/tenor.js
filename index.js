@@ -48,7 +48,7 @@ function buildMap(obj, enumerator) {
 
   // test wether all the functions are presented
   Object.keys(uniqueArguments).forEach((name) => {
-    if (name in map === false) {
+    if (name !== 'callback' && name in map === false) {
       throw new Error(`"${name}" is not found`);
     }
   });
@@ -62,6 +62,9 @@ function buildMap(obj, enumerator) {
 }
 
 function checkDependencies(map, name, stack) {
+  if (name === 'callback') {
+    return
+  }
   // initialize empty if this is the first run
   stack = stack || [];
 
@@ -88,6 +91,9 @@ function buildDependencies(map, rootDepedendencies, list) {
   const dependencies = list || {};
 
   rootDepedendencies.forEach((name) => {
+    if (name === 'callback') {
+      return;
+    }
     const child = map[name];
     if (!child) {
       //XXX: don't throw, he?
@@ -110,18 +116,14 @@ function newCollector() {
       };
     },
     add(n, promise) {
-      if (!promise) {
-        collector.counter++;
-        collector._func(n, { value: 'value_of_' + n, error: null }, collector.counter);
-        return;
-      }
-      promise.then((value) => {
-        collector.counter++;
-        collector._func(n, { value, error: null }, collector.counter);
-      }, (error) => {
-        collector.counter++;
-        collector._func(n, { value: null, error }, collector.counter);
-      });
+      Promise.resolve(promise)
+        .then((value) => {
+          collector.counter++;
+          collector._func(n, { value, error: null }, collector.counter);
+        }, (error) => {
+          collector.counter++;
+          collector._func(n, { value: null, error }, collector.counter);
+        });
     },
 
     onComplete(func) {
@@ -134,7 +136,6 @@ function newCollector() {
 
 
 function runStack(stack, resolved, map, all) {
-  console.log('runStack', stack);
   return new Promise((resolve, reject) => {
 
     let done = false;
@@ -163,11 +164,13 @@ function runStack(stack, resolved, map, all) {
       // find item for next stack
       // and remove dependency
       Object.keys(all).forEach((dependencyName) => {
-        const foundIndex = all[dependencyName].indexOf(name);
+        const dependencies = all[dependencyName];
+        const foundIndex = dependencies.indexOf(name);
         if (foundIndex !== -1) {
           // remove dependency, since it's resolved
-          all[dependencyName].splice(foundIndex, 1);
-          if (all[dependencyName].length === 0) {
+          dependencies.splice(foundIndex, 1);
+          const length = dependencies.length;
+          if (length === 0 || (length === 1 && dependencies[0] === 'callback')) {
             nextStack.push(dependencyName);
           }
         }
@@ -184,14 +187,20 @@ function runStack(stack, resolved, map, all) {
       // build arguments
       const item = map[name];
 
+      let hasCallback = false;
       const args = item.dependencies.map((arg) => {
         if (/^(callback|handler|cb|h)$/.test(arg)) {
+          hasCallback = true;
           return collector.createCallback(name);
         }
+
         return resolved[arg].value;
       });
 
-      collector.add(name, item.func.apply(null, args));
+      const ret = item.func.apply(null, args);
+      if (!hasCallback) {
+        collector.add(name, ret);
+      }
     });
   });
 }
@@ -207,7 +216,9 @@ function runner(obj, lastFunction) {
     const resolved = {};
 
     Object.keys(all).forEach((name) => {
-      if (all[name].length === 0) {
+      if (all[name].length === 0 
+        || (all[name].length === 1 && all[name][0] === 'callback')
+      ) {
         stack.push(name);
       }
     });
@@ -230,7 +241,7 @@ function runner(obj, lastFunction) {
         // call last function
         res(lastFunction.apply(null, args));
       }, (error) => {
-        console.log('error', error.stack);
+        reject(error);
       })
   });
 };
