@@ -1,5 +1,5 @@
 # tenor.js
-Flow-control library using dependency injection 
+Control-flow library using dependency injection 
 
 Imagine, that by defining dependencies between functions you could craete your "perfect" asynchronous flow, without choosing callback style or promises.
 
@@ -10,7 +10,7 @@ const execute = require('tenor');
 
 const flow = {
   user(callback) {
-    reqest.get('/api/get-current-user/', (err, response) => {
+    request.get('/api/get-current-user/', (err, response) => {
       return callback(err, response.body);
     });
   },
