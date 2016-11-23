@@ -14,9 +14,13 @@ const flow = {
       return callback(err, response.body);
     });
   },
-
-  city(user) {
-    return getCityOfUser(user.id); // returns promise
+  
+  time() {
+     return new Date().getTime(); // return directly
+  },
+  
+  city(profile, time) {
+    return getCityOfUser(profile.id, time); // returns promise
   },
 
   profile(user) {
@@ -24,7 +28,7 @@ const flow = {
   }
 };
 
-execute(flow, (user, city, profile) => {
+execute(flow, (profile, city) => {
   //user will have object from response.body
   // city will have result of the resolved promise
   // profile will have value from profiles
