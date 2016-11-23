@@ -29,9 +29,8 @@ const flow = {
 };
 
 execute(flow, (profile, city) => {
-  //user will have object from response.body
-  // city will have result of the resolved promise
   // profile will have value from profiles
+  // city will have result of the resolved promise
 });
 // execute returns promise which can be passed further
 ```
