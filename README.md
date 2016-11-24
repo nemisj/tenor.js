@@ -9,8 +9,12 @@ Just compose and execute:
 const execute = require('tenor');
 
 const profiles = {
-  '15895cb3001': {},
-  '12ad476a700': {}
+  '15895cb3001': {
+    name: 'Boris'
+  },
+  '12ad476a700': {
+    name: 'Doris'
+  }
 };
 
 function getCityOfUser(id, time) {
@@ -59,3 +63,14 @@ For example `city` function requires `profile` and `time` variables, `profile` f
 
 Another point is that in order to make it work you don't have to specify all the defined functions in the final callback `(profile, city) => {}` only those that you need. There are `profile` and `city` required, tenor.js already knows how to resolve them so execution will be in correct order. Also the order of them is not important, it's all about the value which you get inside the final callback.
 
+## Unit-test
+
+Now that your code is written as separate functions it can be easily tested.
+You can export `flow` variable and start unit test functions separately by mocking the parameters with mocks you need.
+
+```javascript
+const flow = require('./get-user-profile.js');
+
+const result = flow.profile({ id: '15895cb3001' });
+assert((result && result.name) === 'Boris', 'Name is not the same');
+```
