@@ -8,8 +8,23 @@ Just compose and execute:
 ```javascript
 const execute = require('tenor');
 
-const profiles = (...json...);
-function getCityOfUser(id, time) { ...code... }
+const profiles = {
+  '15895cb3001': {
+    name: 'Boris'
+  },
+  '12ad476a700': {
+    name: 'Doris'
+  }
+};
+
+function getCityOfUser(id, time) {
+  return new Promise((resolve, reject) => {
+    resolve({
+      id: id,
+      timeZone: time.getTimezoneOffset()
+    });
+  });
+}
 
 const flow = {
   user(callback) {
